@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+	<param name="robot_description" command="$(find xacro)/xacro '$(find flir_ptu_simulation)/robots/simulation.urdf.xacro'" />
+
+  <!-- simulation -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find flir_ptu_simulation)/worlds/simple_environment.world"/>
+    <arg name="paused" value="false"/>
+    <arg name="use_sim_time" value="true"/>
+    <arg name="gui" value="true"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
+  <!-- spawn the robot in gazebo -->
+  <node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model" args="-param robot_description -urdf -model flir_ptu"  respawn="false" output="screen" />
+
+   <!-- load controller -->
+	<include file="$(find flir_ptu_controllers)/launch/load_controller.launch"/>
+  
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher"  />
+  
+</launch>

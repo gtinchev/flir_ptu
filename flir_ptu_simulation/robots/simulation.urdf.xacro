@@ -1,0 +1,67 @@
+<?xml version="1.0"?>
+<robot name="flir_ptu"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+
+  <xacro:macro name="d46_stepper_transmission" params="ptu_name joint_name">
+    <transmission name="${ptu_name}_${joint_name}_trans">
+			<type>transmission_interface/SimpleTransmission</type>
+			<joint name="${ptu_name}_${joint_name}">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+			</joint>
+			<actuator name="${ptu_name}_${joint_name}_motor">
+				<hardwareInterface>EffortJointInterface</hardwareInterface>
+				<mechanicalReduction>1</mechanicalReduction>
+			</actuator>
+    </transmission>
+  </xacro:macro>
+
+
+  <link name="world" />
+
+  <!-- Include and invoke the macro which creates a D46 -->
+  <xacro:include filename="$(find flir_ptu_description)/urdf/d46.urdf.xacro" />
+  <ptu_d46 name="ptu" />
+  
+   
+  <!-- additional urdf elements for gazebo simulation with ros_control -->
+  <gazebo reference="ptu_pan_link">
+		<material>Gazebo/Grey</material>
+	</gazebo>
+  <gazebo reference="ptu_tilt_link">
+		<material>Gazebo/Grey</material>
+	</gazebo>
+  <gazebo reference="ptu_mount_link">
+		<material>Gazebo/Grey</material>
+	</gazebo>
+  
+  
+  <d46_stepper_transmission ptu_name="ptu" joint_name="pan" />
+    
+    <gazebo reference="ptu_pan">
+      <provideFeedback>1</provideFeedback>
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+
+  <d46_stepper_transmission ptu_name="ptu" joint_name="tilt" />
+    
+    <gazebo reference="ptu_tilt">
+      <provideFeedback>1</provideFeedback>
+      <implicitSpringDamper>1</implicitSpringDamper>
+    </gazebo>
+
+  <!-- Create a fixed joint to connect the PTU to the rest of the world -->
+  <joint name="world_to_ptu_base" type="fixed">
+    <parent link="world"/>
+    <child link="ptu_base_link"/>
+    <origin xyz="0 0 0"/>
+  </joint>
+  
+  <!-- Add ros_control to the model in simulation -->
+  <gazebo>
+    <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+      <robotNamespace>ptu</robotNamespace>
+    </plugin>
+  </gazebo>
+  
+</robot>

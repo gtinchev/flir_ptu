@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package>
+  <name>flir_ptu_simulation</name>
+  <version>0.1.0</version>
+  <description>flir_ptu_simulation package contains urdf instantiation for simulation and launch files</description>
+
+  <maintainer email="mpurvis@clearpathrobotics.com">Mike Purvis</maintainer>
+  <url>http://wiki.ros.org/flir_ptu_driver</url>
+  <license>BSD</license>
+  
+  <author email="gwalck@techfak.uni-bielefeld.de">Guillaume Walck</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>flir_ptu_controllers</build_depend>
+  <build_depend>flir_ptu_description</build_depend>
+  <build_depend>gazebo</build_depend>
+  <build_depend>roscpp</build_depend>
+  <run_depend>flir_ptu_controllers</run_depend>
+  <run_depend>flir_ptu_description</run_depend>
+  <run_depend>gazebo</run_depend>
+  <run_depend>roscpp</run_depend>
+
+  <export>
+
+  </export>
+</package>

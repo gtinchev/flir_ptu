@@ -1,0 +1,33 @@
+ptu:
+  # Publish all joint states -----------------------------------
+  joint_state_controller:
+    type: joint_state_controller/JointStateController
+    publish_rate: 100  
+
+  # Position Controllers ---------------------------------------
+  joint_pan_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: ptu_pan
+    pid: {p: 21.0, i: 1.0, d: 0.0}
+  joint_tilt_position_controller:
+    type: effort_controllers/JointPositionController
+    joint: ptu_tilt
+    pid: {p: 50.0, i: 1.0, d: 0.0}
+
+  # Trajectory Controllers ---------------------------------------
+  joint_trajectory_controller:
+    type: effort_controllers/JointTrajectoryController
+    joints: 
+      - ptu_pan
+      - ptu_tilt
+  
+    gains:
+      ptu_pan: {p: 21,  d: 0, i: 1, i_clamp: 3}
+      ptu_tilt: {p: 50,  d: 0, i: 1, i_clamp: 3}
+
+    constraints:
+      goal_time: 0.5                   # Override default
+
+    state_publish_rate:  25            # Override default
+    action_monitor_rate: 30            # Override default
+    stop_trajectory_duration: 0        # Override default
