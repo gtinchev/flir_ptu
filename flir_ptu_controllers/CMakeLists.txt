@@ -6,8 +6,8 @@ project(flir_ptu_controllers)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   control_msgs
-  roscontrol
   roscpp
+  sensor_msgs
   std_msgs
 )
 
@@ -83,7 +83,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES flir_ptu_controllers
-#  CATKIN_DEPENDS control_msgs roscontrol roscpp std_msgs
+#  CATKIN_DEPENDS control_msgs ros_control roscpp std_msgs
 #  DEPENDS system_lib
 )
 
