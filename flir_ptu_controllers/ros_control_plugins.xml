@@ -1,0 +1,11 @@
+<library path="lib/libflir_ptu_controllers">
+  <class name="effort_controllers/JointStatePositionController"
+         type="effort_controllers::JointStatePositionController"
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      The JointStatePositionController controls a set of joints 
+      in joint_space with joint_state as command
+    </description>
+  </class>
+
+</library>

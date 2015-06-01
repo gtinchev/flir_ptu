@@ -31,3 +31,15 @@ ptu:
     state_publish_rate:  25            # Override default
     action_monitor_rate: 30            # Override default
     stop_trajectory_duration: 0        # Override default
+    
+    
+  # JointState Position Controllers ---------------------------------------
+  joint_state_position_controller:
+    type: effort_controllers/JointStatePositionController
+    joints: 
+      - ptu_pan
+      - ptu_tilt
+  
+    gains:
+      ptu_pan: {p: 21,  d: 0, i: 1, i_clamp: 3}
+      ptu_tilt: {p: 50,  d: 0, i: 1, i_clamp: 3}
