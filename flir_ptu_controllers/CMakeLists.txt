@@ -39,7 +39,7 @@ include_directories(
 )
 
 ## Declare a cpp library
-add_library(flir_ptu_controllers src/joint_state_position_controller.cpp)
+add_library(flir_ptu_controllers src/joint_state_position_controller.cpp src/ptu_position_controller.cpp)
 target_link_libraries(flir_ptu_controllers ${catkin_LIBRARIES})
 
 #############

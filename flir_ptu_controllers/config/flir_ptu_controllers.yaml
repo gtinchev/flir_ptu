@@ -39,7 +39,18 @@ ptu:
     joints: 
       - ptu_pan
       - ptu_tilt
-  
+    publish_rate: 100
     gains:
-      ptu_pan: {p: 21,  d: 0, i: 1, i_clamp: 3}
-      ptu_tilt: {p: 50,  d: 0, i: 1, i_clamp: 3}
+      ptu_pan: {p: 21,  d: 1, i: 1, i_clamp: 3}
+      ptu_tilt: {p: 50,  d: 1, i: 1, i_clamp: 3}
+
+  # Ptu Position Controllers ---------------------------------------
+  flir_ptu_position_controller:
+    type: effort_controllers/FlirPTUPositionController
+    joints: 
+      - ptu_pan
+      - ptu_tilt
+    publish_rate: 100
+    gains:
+      ptu_pan: {p: 2.0,  d: 0, i: 1, i_clamp: 0.1}
+      ptu_tilt: {p: 2.0,  d: 0, i: 1, i_clamp: 0.1}

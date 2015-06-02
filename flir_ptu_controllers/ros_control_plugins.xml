@@ -8,4 +8,13 @@
     </description>
   </class>
 
+  <class name="effort_controllers/FlirPTUPositionController"
+         type="effort_controllers::FlirPTUPositionController"
+         base_class_type="controller_interface::ControllerBase">
+    <description>
+      The FlirPTUPositionController controls a set of joints 
+      in joint_space with joint_state as command 
+      with similar behaviour as the flir_ptu_driver
+    </description>
+  </class>
 </library>

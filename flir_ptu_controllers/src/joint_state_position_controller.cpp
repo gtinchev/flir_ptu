@@ -208,7 +208,7 @@ void JointStatePositionController::update(const ros::Time& time, const ros::Dura
     {
       // Compute velocity error if a non-zero velocity command was given
       vel_error = command_velocity - joints_[i].getVelocity();
-
+      ROS_DEBUG_STREAM("vel "<< vel_error << " ,jnt vel " << joints_[i].getVelocity() << " , comm vel: "<< command_velocity);
       // Set the PID error and compute the PID command with nonuniform
       // time step size. This also allows the user to pass in a precomputed derivative error.
       commanded_effort = pid_controllers_[i]->computeCommand(error, vel_error, period);
