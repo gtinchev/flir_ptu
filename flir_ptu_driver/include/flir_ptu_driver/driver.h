@@ -40,12 +40,29 @@
 // command defines
 #define PTU_PAN 'p'
 #define PTU_TILT 't'
+
 #define PTU_MIN 'n'
 #define PTU_MAX 'x'
 #define PTU_MIN_SPEED 'l'
 #define PTU_MAX_SPEED 'u'
-#define PTU_VELOCITY 'v'
-#define PTU_POSITION 'i'
+#define PTU_BASE_SPEED 'b'
+
+#define PTU_POSITION 'p'
+#define PTU_SPEED 's'
+#define PTU_ACCELERATION 'a'
+
+#define PTU_CONTROL_MODE 'c'
+#define PTU_CONTROL_PURE_VELOCITY 'v'
+#define PTU_CONTROL_INDEPENDENT_POSITION 'i'
+
+#define PTU_HOLD_POWER_MODE 'h'
+#define PTU_MOVE_POWER_MODE 'm'
+
+#define PTU_POWER_MODE_REGULAR 'r'
+#define PTU_POWER_MODE_LOW 'l'
+
+#define PTU_HOLD_POWER_OFF 'o'
+#define PTU_MOVE_POWER_HIGH 'h'
 
 #include <string>
 
@@ -78,19 +95,25 @@ public:
    * \param type 'p' or 't'
    * \return position in radians
    */
-  float getPosition(char type);
+  double getPosition(char type);
 
   /**
    * \param type 'p' or 't'
    * \return speed in radians/second
    */
-  float getSpeed(char type);
+  double getSpeed(char type);
+
+  /**
+   * \param type 'p' or 't'
+   * \return speed in radians/second
+   */
+  double getAcceleration(char type);
 
   /**
    * \param type 'p' or 't'
    * \return resolution in radians/count
    */
-  float getResolution(char type)
+  double getResolution(char type)
   {
     return (type == PTU_TILT ? tr : pr);
   }
@@ -99,7 +122,7 @@ public:
    * \param type 'p' or 't'
    * \return Minimum position in radians
    */
-  float getMin(char type)
+  double getMin(char type)
   {
     return getResolution(type) * (type == PTU_TILT ? TMin : PMin);
   }
@@ -107,7 +130,7 @@ public:
    * \param type 'p' or 't'
    * \return Maximum position in radians
    */
-  float getMax(char type)
+  double getMax(char type)
   {
     return getResolution(type) * (type == PTU_TILT ? TMax : PMax);
   }
@@ -116,17 +139,27 @@ public:
    * \param type 'p' or 't'
    * \return Minimum speed in radians/second
    */
-  float getMinSpeed(char type)
+  double getMinSpeed(char type)
   {
     return getResolution(type) * (type == PTU_TILT ? TSMin : PSMin);
   }
+
   /**
    * \param type 'p' or 't'
    * \return Maximum speed in radians/second
    */
-  float getMaxSpeed(char type)
+  double getMaxSpeed(char type)
   {
     return getResolution(type) * (type == PTU_TILT ? TSMax : PSMax);
+  }
+
+  /**
+   * \param type 'p' or 't'
+   * \return Base speed in radians/second
+   */
+  double getBaseSpeed(char type)
+  {
+    return getResolution(type) * (type == PTU_TILT ? TSBase : PSBase);
   }
 
   /**
@@ -137,7 +170,7 @@ public:
    * \param Block block until ready
    * \return True if successfully sent command
   */
-  bool setPosition(char type, float pos, bool Block = false);
+  bool setPosition(char type, double pos, bool Block = false);
 
   /**
    * sets the desired speed in radians/second
@@ -145,20 +178,64 @@ public:
    * \param speed desired speed in radians/second
    * \return True if successfully sent command
   */
-  bool setSpeed(char type, float speed);
+  bool setSpeed(char type, double speed);
+
+  /**
+   * sets the base speed in radians/second
+   * \param type 'p' or 't'
+   * \param speed base speed in radians/second
+   * \return True if successfully sent command
+  */
+  bool setBaseSpeed(char type, double speed);
+
+  /**
+   * sets the desired acceleration in radians/second^2
+   * \param type 'p' or 't'
+   * \param speed desired acceleration in radians/second^2
+   * \return True if successfully sent command
+  */
+  bool setAcceleration(char type, double accel);
 
   /**
    * set the control mode, position or velocity
-   * \param type 'v' for velocity, 'i' for position
+   * \param type PTU_CONTROL_PURE_VELOCITY for velocity, PTU_CONTROL_INDEPENDENT_POSITION for position
    * \return True if successfully sent command
    */
   bool setMode(char type);
 
   /**
    * get the control mode, position or velocity
-   * \return 'v' for velocity, 'i' for position
+   * \return PTU_CONTROL_PURE_VELOCITY for velocity, PTU_CONTROL_INDEPENDENT_POSITION for position
    */
   char getMode();
+
+  /**
+   * set hold (stationary) power mode
+   * \param type PTU_PAN or PTU_TILT
+   * \param mode PTU_POWER_MODE_REGULAR, PTU_POWER_MODE_LOW, PTU_HOLD_POWER_OFF
+   * \return True if successfully sent command
+   */
+  bool setHoldPowerMode(char type, char mode);
+
+  /**
+   * get the hold power mode
+   * \return mode PTU_POWER_MODE_REGULAR, PTU_POWER_MODE_LOW, PTU_HOLD_POWER_OFF
+   */
+  char getHoldPowerMode(char type);
+
+  /**
+   * set move (in-motion) power mode
+   * \param type PTU_PAN or PTU_TILT
+   * \param mode PTU_MOVE_POWER_HIGH, PTU_POWER_MODE_REGULAR or PTU_POWER_MODE_LOW
+   * \return True if successfully sent command
+   */
+  bool setMovePowerMode(char type, char mode);
+
+  /**
+   * get move (in-motion) power mode
+   * \return mode PTU_MOVE_POWER_HIGH, PTU_POWER_MODE_REGULAR or PTU_POWER_MODE_LOW
+   */
+  char getMovePowerMode(char type);
 
   bool home();
 
@@ -167,7 +244,7 @@ private:
    * \param type 'p' or 't'
    * \return pan resolution if type=='p', tilt resolution if type=='t'
    */
-  float getRes(char type);
+  double getRes(char type);
 
   /** get limiting position/speed in counts or counts/second
    *
@@ -189,6 +266,9 @@ private:
   int PSMin;  ///< Min Pan Speed in Counts/second
   int PSMax;  ///< Max Pan Speed in Counts/second
 
+  int PSBase;  ///< Pase Pan Speed in Counts/second
+  int TSBase;  ///< Base Tilt Speed in Counts/second
+
 protected:
   /** Sends a string to the PTU
    *
@@ -197,11 +277,28 @@ protected:
    */
   std::string sendCommand(std::string command);
 
+  /**
+   * set configuration
+   * \param type 'p' or 't'
+   * \param conf configration name
+   * \param command value that will be set for the "conf"
+   * \return True if successfully sent command
+   */
+  bool setConfiguration(char type, char conf, std::string command);
+
+  /**
+   * get configuration
+   * \param type 'p' or 't'
+   * \param conf configration name
+   * \return configuration value
+   */
+  char getConfiguration(char type, char conf);
+
   serial::Serial* ser_;
   bool initialized_;
 
-  float tr;  ///< tilt resolution (rads/count)
-  float pr;  ///< pan resolution (rads/count)
+  double tr;  ///< tilt resolution (rads/count)
+  double pr;  ///< pan resolution (rads/count)
 };
 
 }  // namespace flir_ptu_driver

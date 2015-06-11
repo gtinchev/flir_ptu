@@ -80,9 +80,22 @@ bool PTU::initialize()
   PSMax = getLimit(PTU_PAN, PTU_MAX_SPEED);
   TSMin = getLimit(PTU_TILT, PTU_MIN_SPEED);
   TSMax = getLimit(PTU_TILT, PTU_MAX_SPEED);
+  PSBase = getLimit(PTU_PAN, PTU_BASE_SPEED);
+  TSBase = getLimit(PTU_TILT, PTU_BASE_SPEED);
 
-  if (tr <= 0 || pr <= 0 || PMin == -1 || PMax == -1 || TMin == -1 || TMax == -1)
-  {
+  if (tr <= 0      ||
+      pr <= 0      ||
+      PMin == -1   ||
+      PMax == -1   ||
+      TMin == -1   ||
+      TMax == -1   ||
+      PSMin == -1  ||
+      PSMax == -1  ||
+      TSMin == -1  ||
+      TSMax == -1  ||
+      PSBase == -1 ||
+      TSBase == -1) {
+
     initialized_ = false;
   }
   else
@@ -130,7 +143,7 @@ bool PTU::home()
 }
 
 // get radians/count resolution
-float PTU::getRes(char type)
+double PTU::getRes(char type)
 {
   if (!ser_ || !ser_->isOpen()) return -1;
 
@@ -143,8 +156,8 @@ float PTU::getRes(char type)
   }
 
   double z = parseResponse<double>(buffer);
-  z = z / 3600;  // degrees/count
-  return z * M_PI / 180;  // radians/count
+  z = z / 3600.;  // degrees/count
+  return z * M_PI / 180.;  // radians/count
 }
 
 // get position limit
@@ -165,7 +178,7 @@ int PTU::getLimit(char type, char limType)
 
 
 // get position in radians
-float PTU::getPosition(char type)
+double PTU::getPosition(char type)
 {
   if (!initialized()) return -1;
 
@@ -182,7 +195,7 @@ float PTU::getPosition(char type)
 
 
 // set position in radians
-bool PTU::setPosition(char type, float pos, bool block)
+bool PTU::setPosition(char type, double pos, bool block)
 {
   if (!initialized()) return false;
 
@@ -213,11 +226,11 @@ bool PTU::setPosition(char type, float pos, bool block)
 }
 
 // get speed in radians/sec
-float PTU::getSpeed(char type)
+double PTU::getSpeed(char type)
 {
   if (!initialized()) return -1;
 
-  std::string buffer = sendCommand(std::string() + type + "s ");
+  std::string buffer = sendCommand(std::string() + type +  PTU_SPEED + " ");
 
   if (buffer.length() < 3 || buffer[0] != '*')
   {
@@ -228,10 +241,26 @@ float PTU::getSpeed(char type)
   return parseResponse<double>(buffer) * getResolution(type);
 }
 
+// get speed in radians/sec
+double PTU::getAcceleration(char type)
+{
+  if (!initialized()) return -1;
+
+  std::string buffer = sendCommand(std::string() + type +  PTU_ACCELERATION + " ");
+
+  if (buffer.length() < 3 || buffer[0] != '*')
+  {
+    ROS_ERROR("Error getting pan-tilt acceleration");
+    return -1;
+  }
+
+  return parseResponse<double>(buffer) * getResolution(type);
+}
+
 
 
 // set speed in radians/sec
-bool PTU::setSpeed(char type, float pos)
+bool PTU::setSpeed(char type, double pos)
 {
   if (!initialized()) return false;
 
@@ -258,13 +287,62 @@ bool PTU::setSpeed(char type, float pos)
   return true;
 }
 
+bool PTU::setBaseSpeed(char type, double speed)
+{
+  if (!initialized()) return false;
+
+  int count = static_cast<int>(speed / getResolution(speed));
+
+  // Check limits
+  if (abs(count) < (type == PTU_TILT ? TSMin : PSMin) || abs(count) > (type == PTU_TILT ? TSMax : PSMax))
+  {
+    ROS_ERROR("Pan Tilt Base Speed Value out of Range: %c %f(%d) (%d-%d)\n",
+              type, speed, count, (type == PTU_TILT ? TSMin : PSMin), (type == PTU_TILT ? TSMax : PSMax));
+    return false;
+  }
+
+  std::string buffer = sendCommand(std::string() + type + PTU_BASE_SPEED +
+                                   lexical_cast<std::string>(count) + " ");
+
+  if (buffer.empty() || buffer[0] != '*')
+  {
+    ROS_ERROR("Error setting pan-tilt base speed\n");
+    std::cout << buffer << std::endl;
+    return false;
+  }
+
+  return true;
+}
+
+// set acceleration in radians/sec^2
+bool PTU::setAcceleration(char type, double accel)
+{
+  if (!initialized()) return false;
+
+  // get raw encoder accel to move
+  int count = static_cast<int>(accel / getResolution(type));
+
+  std::string buffer = sendCommand(std::string() + type + PTU_ACCELERATION +
+                                   lexical_cast<std::string>(count) + " ");
+
+  if (buffer.empty() || buffer[0] != '*')
+  {
+    ROS_ERROR("Error setting axis(%c) acceleration %f rad/sec^2 (count %d). \n %s\n",
+              type, accel, count, buffer.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+
 
 // set movement mode (position/velocity)
 bool PTU::setMode(char type)
 {
   if (!initialized()) return false;
 
-  std::string buffer = sendCommand(std::string("c") + type + " ");
+  std::string buffer = sendCommand(std::string() + PTU_CONTROL_MODE + type + " ");
 
   if (buffer.empty() || buffer[0] != '*')
   {
@@ -289,12 +367,69 @@ char PTU::getMode()
     return -1;
   }
 
-  if (buffer[2] == 'p')
-    return PTU_VELOCITY;
-  else if (buffer[2] == 'i')
-    return PTU_POSITION;
-  else
+  if (buffer[2] == PTU_CONTROL_PURE_VELOCITY) {
+    return PTU_CONTROL_PURE_VELOCITY;
+  }
+  else if (buffer[2] == PTU_CONTROL_INDEPENDENT_POSITION) {
+    return PTU_CONTROL_INDEPENDENT_POSITION;
+  }
+  else {
+    ROS_ERROR("unknown control mode");
     return -1;
+  }
 }
+
+bool PTU::setHoldPowerMode(char type, char mode)
+{
+  return setConfiguration(type, PTU_HOLD_POWER_MODE, std::string(1, mode));
+}
+
+char PTU::getHoldPowerMode(char type)
+{
+  return getConfiguration(type, PTU_HOLD_POWER_MODE);
+}
+
+bool PTU::setMovePowerMode(char type, char mode)
+{
+  return setConfiguration(type, PTU_MOVE_POWER_MODE, std::string(1, mode));
+}
+
+char PTU::getMovePowerMode(char type)
+{
+  return getConfiguration(type, PTU_MOVE_POWER_MODE);
+}
+
+bool PTU::setConfiguration(char type, char conf, std::string command)
+{
+  if (!initialized()) return -1;
+
+  std::string buffer = sendCommand(std::string() + type + conf + command + " ");
+
+  if (buffer.length() < 3 || buffer[0] != '*')
+  {
+    ROS_ERROR("Error setting configuration! Axis: %c, Configuration name: %c, Value %s \n",
+              type, conf, command.c_str());
+    return -1;
+  }
+}
+
+char PTU::getConfiguration(char type, char conf)
+{
+  if (!initialized()) return -1;
+
+  // get
+  std::string buffer = sendCommand(std::string() + type + conf + " ");
+
+  if (buffer.length() < 3 || buffer[0] != '*')
+  {
+    ROS_ERROR("Error getting configuration! Axis: %c, Configuration name: %c \n",
+              type, conf);
+    return -1;
+  }
+  else {
+    return buffer[2];
+  }
+}
+
 
 }  // namespace flir_ptu_driver
