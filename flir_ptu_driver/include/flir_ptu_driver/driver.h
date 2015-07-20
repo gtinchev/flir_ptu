@@ -239,6 +239,8 @@ public:
 
   bool home();
 
+  bool setBaudRate(const unsigned int rate);
+
 private:
   /** get radian/count resolution
    * \param type 'p' or 't'

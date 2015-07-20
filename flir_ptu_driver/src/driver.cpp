@@ -36,6 +36,7 @@
 
 #include <math.h>
 #include <string>
+#include <time.h>
 
 using boost::lexical_cast;
 
@@ -63,10 +64,14 @@ bool PTU::initialized()
 
 bool PTU::initialize()
 {
-  ser_->write("ft ");  // terse feedback
-  ser_->write("ed ");  // disable echo
-  ser_->write("ci ");  // position mode
-  ser_->read(20);
+  std::string rst;
+
+  // clean up the buffer
+  rst = ser_->read(20);
+
+  rst = sendCommand("ft ");  // terse feedback
+  rst = sendCommand("ed ");  // disable echo
+  rst = sendCommand("ci ");  // position mode
 
   // get pan tilt encoder res
   tr = getRes(PTU_TILT);
@@ -141,6 +146,25 @@ bool PTU::home()
   ROS_WARN("PTU reset command response not received before timeout.");
   return false;
 }
+
+bool PTU::setBaudRate(const unsigned int rate)
+{
+  if (rate > 0) {
+    std::string buffer = sendCommand(std::string() + "@(" +  lexical_cast<std::string>(rate) + ",0,f) ");
+
+    if (buffer.length() < 3 || buffer[0] != '*') {
+      ROS_ERROR("Error setting serial communication baud rate");
+      return false;
+    }
+    else {
+      return true;
+    }
+  }
+  else {
+    return false;
+  }
+}
+
 
 // get radians/count resolution
 double PTU::getRes(char type)
