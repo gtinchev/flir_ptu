@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
-	<param name="robot_description" command="$(find xacro)/xacro '$(find flir_ptu_simulation)/robots/simulation.urdf.xacro'" />
+
+  <param name="robot_description" command="$(find xacro)/xacro '$(find flir_ptu_simulation)/robots/simulation.urdf.xacro' d46:=false d48:=true" />
 
   <!-- simulation -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">

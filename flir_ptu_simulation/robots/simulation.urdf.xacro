@@ -3,26 +3,53 @@
        xmlns:xacro="http://ros.org/wiki/xacro">
 
 
-  <xacro:macro name="d46_stepper_transmission" params="ptu_name joint_name">
-    <transmission name="${ptu_name}_${joint_name}_trans">
-			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${ptu_name}_${joint_name}">
-				<hardwareInterface>EffortJointInterface</hardwareInterface>
-			</joint>
-			<actuator name="${ptu_name}_${joint_name}_motor">
-				<hardwareInterface>EffortJointInterface</hardwareInterface>
-				<mechanicalReduction>1</mechanicalReduction>
-			</actuator>
-    </transmission>
-  </xacro:macro>
+  <!-- D46 model -->
+  <xacro:if value="$(arg d46)">
+    <xacro:macro name="d46_stepper_transmission" params="ptu_name joint_name">
+      <transmission name="${ptu_name}_${joint_name}_trans">
+        <type>transmission_interface/SimpleTransmission</type>
+        <joint name="${ptu_name}_${joint_name}">
+          <hardwareInterface>EffortJointInterface</hardwareInterface>
+        </joint>
+        <actuator name="${ptu_name}_${joint_name}_motor">
+          <hardwareInterface>EffortJointInterface</hardwareInterface>
+          <mechanicalReduction>1</mechanicalReduction>
+        </actuator>
+      </transmission>
+    </xacro:macro>
+  </xacro:if>
+  
+
+  <!-- D48 model -->
+  <xacro:if value="$(arg d48)">
+    <xacro:macro name="d48_stepper_transmission" params="ptu_name joint_name">
+      <transmission name="${ptu_name}_${joint_name}_trans">
+  			<type>transmission_interface/SimpleTransmission</type>
+  			<joint name="${ptu_name}_${joint_name}">
+  				<hardwareInterface>EffortJointInterface</hardwareInterface>
+  			</joint>
+  			<actuator name="${ptu_name}_${joint_name}_motor">
+  				<hardwareInterface>EffortJointInterface</hardwareInterface>
+  				<mechanicalReduction>1</mechanicalReduction>
+  			</actuator>
+      </transmission>
+    </xacro:macro>
+  </xacro:if>
+
 
 
   <link name="world" />
 
   <!-- Include and invoke the macro which creates a D46 -->
-  <xacro:include filename="$(find flir_ptu_description)/urdf/d46.urdf.xacro" />
-  <ptu_d46 name="ptu" />
-  
+  <xacro:if value="$(arg d46)">
+    <xacro:include filename="$(find flir_ptu_description)/urdf/d46.urdf.xacro" />
+    <ptu_d46 name="ptu" />
+  </xacro:if>
+
+  <xacro:if value="$(arg d48)">
+    <xacro:include filename="$(find flir_ptu_description)/urdf/d48.urdf.xacro" />
+    <ptu_d48 name="ptu" />
+  </xacro:if>
    
   <!-- additional urdf elements for gazebo simulation with ros_control -->
   <gazebo reference="ptu_pan_link">
@@ -35,20 +62,29 @@
 		<material>Gazebo/Grey</material>
 	</gazebo>
   
-  
-  <d46_stepper_transmission ptu_name="ptu" joint_name="pan" />
+  <xacro:if value="$(arg d46)">
+    <d46_stepper_transmission ptu_name="ptu" joint_name="pan" />
+  </xacro:if>
+  <xacro:if value="$(arg d48)">
+    <d48_stepper_transmission ptu_name="ptu" joint_name="pan" />
+  </xacro:if>
     
-    <gazebo reference="ptu_pan">
-      <provideFeedback>1</provideFeedback>
-      <implicitSpringDamper>1</implicitSpringDamper>
-    </gazebo>
+  <gazebo reference="ptu_pan">
+    <provideFeedback>1</provideFeedback>
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
 
-  <d46_stepper_transmission ptu_name="ptu" joint_name="tilt" />
+  <xacro:if value="$(arg d46)">
+    <d46_stepper_transmission ptu_name="ptu" joint_name="tilt" />
+  </xacro:if>
+  <xacro:if value="$(arg d48)">
+    <d48_stepper_transmission ptu_name="ptu" joint_name="tilt" />
+  </xacro:if>
     
-    <gazebo reference="ptu_tilt">
-      <provideFeedback>1</provideFeedback>
-      <implicitSpringDamper>1</implicitSpringDamper>
-    </gazebo>
+  <gazebo reference="ptu_tilt">
+    <provideFeedback>1</provideFeedback>
+    <implicitSpringDamper>1</implicitSpringDamper>
+  </gazebo>
 
   <!-- Create a fixed joint to connect the PTU to the rest of the world -->
   <joint name="world_to_ptu_base" type="fixed">
